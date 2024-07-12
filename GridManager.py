@@ -1,9 +1,9 @@
 import pygame
 import numpy as np
 from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points,draw_fronteriors_points
-from astar import make_plan as a_star_search
+from Astar import make_plan as a_star_search
 from Djikstra import make_plan as dijkstra_search
-from theta_star import make_plan as theta_star_search  # Import Theta* search function
+from Theta_star import make_plan as theta_star_search 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
