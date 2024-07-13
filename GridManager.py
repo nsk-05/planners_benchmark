@@ -1,9 +1,12 @@
 import pygame
+import pygame_gui
 import numpy as np
-from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points,draw_fronteriors_points
+from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points, draw_fronteriors_points
 from Astar import make_plan as a_star_search
 from Djikstra import make_plan as dijkstra_search
 from Theta_star import make_plan as theta_star_search 
+from Theta_star import make_plan as d_star_lite_search
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
@@ -13,22 +16,22 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(100, 100), cell_size=10):
+    def __init__(self, grid_size=(10, 10), cell_size=50):
         pygame.init()
 
         self.grid_size = grid_size
-        self.cell_size = cell_size
+        self.cell_size = cell_size #int(1000 / grid_size[0]) #cell_size
         self.grid = np.zeros(grid_size, dtype=int)
 
         self.start = (0, 0)
-        self.goal = (99, 99)
+        self.goal = (grid_size[0]-1,grid_size[1]-1)
         self.path = []
         self.explored_points = set()
-        self.fronteriors_points =set()
-
+        self.fronteriors_points = set()
+        self.inflation_radius=0
         self.screen_width = grid_size[1] * cell_size
         self.screen_height = grid_size[0] * cell_size
-        self.side_panel_width = 200
+        self.side_panel_width = 250
         self.total_width = self.screen_width + self.side_panel_width
 
         self.screen = pygame.display.set_mode((self.total_width, self.screen_height))
@@ -42,11 +45,24 @@ class GridManager:
         self.mouse_pressed = False
         self.search_generator = None
 
+        # Initialize pygame GUI manager
+        self.gui_manager = pygame_gui.UIManager((self.total_width, self.screen_height))
+
+        # Initialize sliders
+        self.inflation_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 400), (180, 20)),
+                                                                       start_value=1,
+                                                                       value_range=(1, 10),
+                                                                       manager=self.gui_manager)
+
+        # Initialize cost map (0 for normal, higher values for higher costs)
+        self.cost_map = [[0 for _ in range(grid_size[1])] for _ in range(grid_size[0])]
+
     def run(self):
         running = True
         clock = pygame.time.Clock()
 
         while running:
+            time_delta = clock.tick(60)/1000.0  # Time in seconds since last loop
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -56,19 +72,26 @@ class GridManager:
                     self.mouse_pressed = False
                 if event.type == pygame.MOUSEMOTION and self.mouse_pressed:
                     self.handle_mouse_motion()
+                if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+                    if event.ui_element == self.inflation_slider:
+                        self.inflation_radius = int(self.inflation_slider.get_current_value())
+                
+                self.gui_manager.process_events(event)
 
             if self.search_generator:
                 try:
                     self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
                     if self.path and self.path[-1] == self.goal:
-                        self.explored_points=set()
-                        self.fronteriors_points=set()
+                        self.explored_points = set()
+                        self.fronteriors_points = set()
                         self.search_generator = None
                 except StopIteration:
                     self.search_generator = None
 
+            self.gui_manager.update(time_delta)
+            
             self.update_display()
-            clock.tick(100)  # Control the speed of visualization
+            clock.tick(30)  # Control the speed of visualization
 
         pygame.quit()
 
@@ -96,7 +119,7 @@ class GridManager:
             self.handle_side_panel_click(mouse_x, mouse_y)
 
     def handle_side_panel_click(self, mouse_x, mouse_y):
-        if self.screen_width + 10 <= mouse_x <= self.screen_width + 130:
+        if self.screen_width + 10 <= mouse_x <= self.screen_width + 180:
             if 100 <= mouse_y <= 130:
                 self.setting_start = not self.setting_start
                 self.setting_goal = False
@@ -123,17 +146,26 @@ class GridManager:
                 self.setting_goal = False
                 self.setting_obstacle = False
                 self.clearing_obstacle = False
-                self.start_search()
+                self.path = []
+                self.explored_points = set()
+                self.fronteriors_points = set()
+                # self.start_search()
             elif 350 <= mouse_y <= 380:
-                if(self.screen_width+10 <= mouse_x < self.screen_width+60):
+                if self.screen_width + 10 <= mouse_x < self.screen_width + 60:
                     self.algorithm = "A*"
                     self.start_search()
-                elif self.screen_width+60 <= mouse_x < self.screen_width+110:
+                elif self.screen_width + 60 <= mouse_x < self.screen_width + 110:
                     self.algorithm = "Dijkstra"
                     self.start_search()
-                elif self.screen_width+110 <= mouse_x < self.screen_width+160:
+                elif self.screen_width + 110 <= mouse_x < self.screen_width + 160:
                     self.algorithm = "Theta*"
                     self.start_search()
+                elif self.screen_width + 160 <= mouse_x < self.screen_width + 210:
+                    print("Selecting RRT*")
+                    self.algorithm = "RRT**"
+                    self.start_search()
+                print(mouse_x)
+
 
     def start_search(self):
         self.search_generator = None
@@ -143,9 +175,11 @@ class GridManager:
             self.search_generator = dijkstra_search(self.grid, self.start, self.goal)
         elif self.algorithm == "Theta*":
             self.search_generator = theta_star_search(self.grid, self.start, self.goal)
+        elif self.algorithm == "RRT*":
+            self.search_generator = d_star_lite_search(self.grid, self.start, self.goal)
         self.path = []
         self.explored_points = set()
-        self.fronteriors_points=set()
+        self.fronteriors_points = set()
 
     def handle_mouse_motion(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -157,16 +191,51 @@ class GridManager:
             elif self.clearing_obstacle:
                 self.grid[row, col] = 0
 
+    def update_gui(self, events):
+        print("update gui added")
+        for event in events:
+            if event.type == pygame.USEREVENT:
+                print("slider")
+                if event.user_type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
+                    if event.ui_element == self.inflation_slider:
+                        inflation_radius = int(self.inflation_slider.get_current_value())
+                        self.update_cost_map(inflation_radius)
+            self.gui_manager.process_events(event)
+
+    def update_cost_map(self, inflation_radius):
+        # Reset cost map
+        self.cost_map = [[0 for _ in range(self.grid.shape[1])] for _ in range(self.grid.shape[0])]
+        # Apply inflation to obstacles
+        for row in range(self.grid.shape[0]):
+            for col in range(self.grid.shape[1]):
+                if self.grid[row, col] == 1:
+                    self.inflate_obstacle(row, col, inflation_radius)
+        print(self.cost_map)
+
+    def inflate_obstacle(self, row, col, inflation_radius):
+        for r in range(max(0, row - inflation_radius), min(self.grid.shape[0], row + inflation_radius + 1)):
+            for c in range(max(0, col - inflation_radius), min(self.grid.shape[1], col + inflation_radius + 1)):
+                if self.grid[r, c] == 0:
+                    self.cost_map[r][c] += 1
+
+    def draw_slider(self):
+        # self.gui_manager.update(0)
+        self.gui_manager.draw_ui(self.screen)
+        font = pygame.font.Font(None, 24)
+        slider_label = font.render(f'Inflation Radius: {self.inflation_slider.get_current_value()}', True, BLACK)
+        self.screen.blit(slider_label, (self.screen_width + 10, 385))
+
     def update_display(self):
         self.screen.fill(WHITE)
+        # self.update_cost_map(self.inflation_radius)
         draw_grid(self.screen, self.grid, self.cell_size, self.screen_width)
         draw_path(self.screen, self.path if self.path is not None else [], self.cell_size)
         draw_explored_points(self.screen, self.explored_points, self.cell_size)
         draw_fronteriors_points(self.screen, self.fronteriors_points, self.cell_size)
         draw_start_goal(self.screen, self.start, self.goal, self.cell_size)
         draw_side_panel(self.screen, self.screen_width, self.side_panel_width,
-                        self.setting_start, self.setting_goal, self.setting_obstacle, self.clearing_obstacle,self.algorithm)
-
+                        self.setting_start, self.setting_goal, self.setting_obstacle, self.clearing_obstacle, self.algorithm)
+        self.draw_slider()
         pygame.display.flip()
 
 if __name__ == "__main__":
