@@ -16,7 +16,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(10, 10), cell_size=50):
+    def __init__(self, grid_size=(5, 5), cell_size=100):
         pygame.init()
 
         self.grid_size = grid_size
@@ -51,7 +51,7 @@ class GridManager:
         # Initialize sliders
         self.inflation_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 400), (180, 20)),
                                                                        start_value=1,
-                                                                       value_range=(1, 10),
+                                                                       value_range=(0, 10),
                                                                        manager=self.gui_manager)
 
         # Initialize cost map (0 for normal, higher values for higher costs)
@@ -75,6 +75,7 @@ class GridManager:
                 if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                     if event.ui_element == self.inflation_slider:
                         self.inflation_radius = int(self.inflation_slider.get_current_value())
+                        self.update_cost_map(self.inflation_radius)
                 
                 self.gui_manager.process_events(event)
 
@@ -149,7 +150,6 @@ class GridManager:
                 self.path = []
                 self.explored_points = set()
                 self.fronteriors_points = set()
-                # self.start_search()
             elif 350 <= mouse_y <= 380:
                 if self.screen_width + 10 <= mouse_x < self.screen_width + 60:
                     self.algorithm = "A*"
@@ -205,18 +205,25 @@ class GridManager:
     def update_cost_map(self, inflation_radius):
         # Reset cost map
         self.cost_map = [[0 for _ in range(self.grid.shape[1])] for _ in range(self.grid.shape[0])]
+
         # Apply inflation to obstacles
         for row in range(self.grid.shape[0]):
             for col in range(self.grid.shape[1]):
                 if self.grid[row, col] == 1:
-                    self.inflate_obstacle(row, col, inflation_radius)
+                    print("found obstacle")
+                    self.inflate_obstacle(row, col, inflation_radius+1)
+                    self.cost_map[row][col]=1
         print(self.cost_map)
 
     def inflate_obstacle(self, row, col, inflation_radius):
-        for r in range(max(0, row - inflation_radius), min(self.grid.shape[0], row + inflation_radius + 1)):
-            for c in range(max(0, col - inflation_radius), min(self.grid.shape[1], col + inflation_radius + 1)):
-                if self.grid[r, c] == 0:
-                    self.cost_map[r][c] += 1
+        for dr in range(-inflation_radius, inflation_radius + 1):
+            for dc in range(-inflation_radius, inflation_radius + 1):
+                r = row + dr
+                c = col + dc
+                if 0 <= r < self.grid.shape[0] and 0 <= c < self.grid.shape[1]:
+                    distance = max(abs(dr), abs(dc))
+                    added_cost = max(0, inflation_radius - distance) * 0.1
+                    self.cost_map[r][c] += added_cost
 
     def draw_slider(self):
         # self.gui_manager.update(0)
