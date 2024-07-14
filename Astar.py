@@ -62,7 +62,7 @@ def get_fronterior_points(open_list):
         points.append((i[1],i[2]))
     return points
 
-def make_plan(grid, start, goal):
+def make_plan(grid, start, goal,is_generator):
     # create a opne list
     global ROW,COL
     open_list=[]
@@ -72,7 +72,7 @@ def make_plan(grid, start, goal):
     closed_list = [[False for _ in range(COL)] for _ in range(ROW)]
     # Initialize the details of each cell
     cell_details = [[Cell() for _ in range(COL)] for _ in range(ROW)]
-    neighbours=[(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)] #[(0,1),(0,-1),(1,0),(-1,0)]
+    neighbours=[(0,1),(0,-1),(1,0),(-1,0)]
     i=start[0]
     j=start[1]
     cell_details[i][j].f=0
@@ -103,7 +103,7 @@ def make_plan(grid, start, goal):
                     cell_details[new_i][new_j].parent_j = j
                     path=trace_path(cell_details,goal)
                     # show_cell_cost(cell_details)
-                    found_dest = True
+                    
                     yield path, None, None
                 else:
                     g_new=cell_details[i][j].g+ 1 + (5*grid[i][j])
@@ -119,10 +119,13 @@ def make_plan(grid, start, goal):
                         cell_details[new_i][new_j].parent_i=i
                         cell_details[new_i][new_j].parent_j=j
 
+        if(is_generator):
             explored_points=get_explored_points(closed_list)
             fronterior_points=get_fronterior_points(open_list)
-        yield None, explored_points, fronterior_points
-    yield None, explored_points, fronterior_points
+        
+            yield None, explored_points, fronterior_points
+    if(is_generator):
+            yield None, explored_points, fronterior_points
 
 
     # while True:

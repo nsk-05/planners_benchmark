@@ -41,19 +41,18 @@ def draw_explored_points(is_node_graph,screen, explored_points, cell_size):
     else:
         for row, col in explored_points:
             pygame.draw.rect(screen, ORANGE, (col * cell_size, row * cell_size, cell_size, cell_size))
-def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting_obstacle, clearing_obstacle,algorithm):
+def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting_obstacle, clearing_obstacle,visualize):
     pygame.draw.rect(screen, GREY, (start_x, 0, width, screen.get_height()))
-
     draw_button(screen, start_x + 10, 100, "Set Start", setting_start)
     draw_button(screen, start_x + 10, 150, "Set Goal", setting_goal)
-    draw_button(screen, start_x + 10, 200, "Add Obstacle", setting_obstacle)
-    draw_button(screen, start_x + 10, 250, "Clear Obstacle", clearing_obstacle)
+    draw_button(screen, start_x + 10, 200, "Add Obstacle", setting_obstacle,button_size=(200, 30))
+    draw_button(screen, start_x + 10, 250, "Clear Obstacle", clearing_obstacle,button_size=(200, 30))
     draw_button(screen, start_x + 10, 300, "Clear All", False)
-    draw_button(screen, start_x + 10, 350, "A*", False,button_size=(50, 30), color= BLACK)
-    draw_button(screen, start_x + 60, 350, "Dji", False,button_size=(50, 30), color= BLACK)
-    draw_button(screen, start_x + 110, 350, "T*", False,button_size=(50, 30), color= BLACK)
-    draw_button(screen, start_x + 160, 350, "RRT*", False,button_size=(50, 30), color= BLACK)
-
+    draw_button(screen, start_x + 10, 350, "A*", False,button_size=(40, 30), color= BLACK)
+    draw_button(screen, start_x + 60, 350, "Dji", False,button_size=(40, 30), color= BLACK)
+    draw_button(screen, start_x + 110, 350, "T*", False,button_size=(40, 30), color= BLACK)
+    draw_button(screen, start_x + 160, 350, "RRT*", False,button_size=(70, 30), color= BLACK)
+    draw_button(screen, start_x + 10, 430, "Visualize", visualize,button_size=(130, 30))
 
 def draw_button(screen, x, y, text, active,button_size=(120, 30),color=RED):
     font = pygame.font.Font(None, 36)

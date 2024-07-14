@@ -60,7 +60,7 @@ def reconstruct_path(came_from, current):
         
     path.reverse()
     return path
-def make_plan(grid, start, goal):
+def make_plan(grid, start, goal,is_generator):
     global rows, cols
     rows, cols = len(grid),len(grid[0])
     open_set = []
@@ -98,7 +98,7 @@ def make_plan(grid, start, goal):
             path.append((row, col))
             path.reverse()
             yield path, None, None
-
+            
         explored_points.add(current)
 
         for neighbor in get_neighbors(current):
@@ -128,7 +128,8 @@ def make_plan(grid, start, goal):
                 cell_details[neighbor[0]][neighbor[1]].parent_i,cell_details[neighbor[0]][neighbor[1]].parent_j=current
                 heapq.heappush(open_set, (cell_details[neighbor[0]][neighbor[1]].g + heuristic(neighbor, goal), neighbor))
 
-        fronterior_points=get_fronterior_points(open_set)
+        if(is_generator):
+            fronterior_points=get_fronterior_points(open_set)
+            yield None, explored_points,fronterior_points
+    if(is_generator):
         yield None, explored_points,fronterior_points
-
-    yield None, explored_points,fronterior_points

@@ -18,7 +18,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(100, 100), cell_size=5):
+    def __init__(self, grid_size=(100, 100), cell_size=10):
         pygame.init()
 
         self.grid_size = grid_size
@@ -42,6 +42,7 @@ class GridManager:
         self.setting_goal = False
         self.setting_obstacle = False
         self.clearing_obstacle = False
+        self.visualize = True
 
         self.algorithm = "A*"
         self.is_node_graph=False
@@ -85,8 +86,9 @@ class GridManager:
             if self.search_generator:
                 try:
                     self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
-                    if self.path and self.path[-1] == self.goal:
-                        print("found the path")
+                    if self.path :
+                        print(self.path[-1],self.goal)
+                        print("found the path so closing")
                         self.explored_points = set()
                         self.fronteriors_points = set()
                         self.search_generator = None
@@ -114,11 +116,12 @@ class GridManager:
                 self.grid[row, col] = 0
             elif self.setting_start:
                 self.start = (row, col)
-                self.setting_start = False
+                # self.setting_start = False
+                self.setting_goal = False
                 self.start_search()
             elif self.setting_goal:
                 self.goal = (row, col)
-                self.setting_goal = False
+                self.setting_start = False
                 self.start_search()
         else:
             self.handle_side_panel_click(mouse_x, mouse_y)
@@ -167,23 +170,34 @@ class GridManager:
                     self.algorithm = "Theta*"
                     self.is_node_graph=False
                     self.start_search()
-                elif self.screen_width + 160 <= mouse_x < self.screen_width + 210:
+                elif self.screen_width + 160 <= mouse_x < self.screen_width + 230:
                     print("Selecting RRT*")
                     self.algorithm = "RRT*"
                     self.is_node_graph=True
                     self.start_search()
+            elif 430 <= mouse_y <= 460:
+                self.visualize = not self.visualize
+                print("changing visualization")
 
     def start_search(self):
         self.search_generator = None
+        is_generator=self.visualize
         if self.algorithm == "A*":
-            self.search_generator = a_star_search(np.array(self.cost_map), self.start, self.goal)
+            self.search_generator = a_star_search(np.array(self.cost_map), self.start, self.goal,is_generator)
         elif self.algorithm == "Dijkstra":
-            self.search_generator = dijkstra_search(np.array(self.cost_map), self.start, self.goal)
+            self.search_generator = dijkstra_search(np.array(self.cost_map), self.start, self.goal,is_generator)
         elif self.algorithm == "Theta*":
-            self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal)
+            self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal,is_generator)
         elif self.algorithm == "RRT*":
-            self.search_generator = rrt_star_search(self.grid, self.start, self.goal)
-        self.path = []
+            self.search_generator = rrt_star_search(self.grid, self.start, self.goal,is_generator)
+        if(not is_generator):
+            self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
+            if self.path :
+                print(self.path[-1],self.goal)
+                print("found the path so closing")
+                self.search_generator = None
+        else:
+            self.path = []
         self.explored_points = set()
         self.fronteriors_points = set()
 
@@ -201,7 +215,6 @@ class GridManager:
         print("update gui added")
         for event in events:
             if event.type == pygame.USEREVENT:
-                print("slider")
                 if event.user_type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                     if event.ui_element == self.inflation_slider:
                         inflation_radius = int(self.inflation_slider.get_current_value())
@@ -250,7 +263,7 @@ class GridManager:
         draw_fronteriors_points(self.screen, self.fronteriors_points, self.cell_size)
         draw_start_goal(self.screen, self.start, self.goal, self.cell_size)
         draw_side_panel(self.screen, self.screen_width, self.side_panel_width,
-                        self.setting_start, self.setting_goal, self.setting_obstacle, self.clearing_obstacle, self.algorithm)
+                        self.setting_start, self.setting_goal, self.setting_obstacle, self.clearing_obstacle, self.visualize)
         self.draw_slider()
         pygame.display.flip()
 

@@ -12,7 +12,6 @@ class RRTStar:
         self.step_size = step_size
         self.search_radius = search_radius
         self.path = []
-        # self.plot_grid()
 
     def distance(self, node1, node2):
         return math.sqrt((node1.position[0] - node2.position[0]) ** 2 + (node1.position[1] - node2.position[1]) ** 2)
@@ -77,7 +76,7 @@ class RRTStar:
                 nearby_node.parent = new_node
                 nearby_node.cost = new_node.cost + self.distance(new_node, nearby_node)
 
-    def make_plan(self,grid, start, goal):
+    def make_plan(self,grid, start, goal,is_generator):
         print("rrt plannrer invoked")
         self.grid = grid
         self.start = Node(tuple(start))
@@ -86,7 +85,7 @@ class RRTStar:
         node_list=[]
         fronterior_points=[]
         node_graph=[]
-        # self.plot_grid()
+
         for i in range(self.max_iterations):
             random_node = self.get_random_node()
             nearest_node = self.get_nearest_node(random_node)
@@ -119,10 +118,12 @@ class RRTStar:
                 self.path = self.extract_path()
                 # self.update_display(self.goal)
                 print("path_found", self.path)
-                yield self.path, set(),set()
-        
-            yield None, node_graph, fronterior_points
-        yield None, None, None
+                yield self.path, None, None
+            
+            if(is_generator):      
+               yield None, node_graph, fronterior_points
+        if(is_generator):
+            yield None, None, None
 
     def extract_path(self):
         path = []
