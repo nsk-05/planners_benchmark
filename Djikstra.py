@@ -43,7 +43,7 @@ def make_plan(grid,start, goal):
     i= start[0]
     j= start[1]
     path=[]
-    neighbours=[(0,1),(0,-1),(1,0),(-1,0)]
+    neighbours=[(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)] #[(0,1),(0,-1),(1,0),(-1,0)]
     cell_details[i][j].parent_i=i
     cell_details[i][j].parent_j=j
     cell_details[i][j].f=0

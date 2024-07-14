@@ -5,7 +5,9 @@ from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, dr
 from Astar import make_plan as a_star_search
 from Djikstra import make_plan as dijkstra_search
 from Theta_star import make_plan as theta_star_search 
-from Theta_star import make_plan as d_star_lite_search
+from RRT_star import RRTStar
+rrt_star=RRTStar()
+rrt_star_search=rrt_star.make_plan
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -16,7 +18,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(50, 50), cell_size=10):
+    def __init__(self, grid_size=(100, 100), cell_size=5):
         pygame.init()
 
         self.grid_size = grid_size
@@ -42,6 +44,7 @@ class GridManager:
         self.clearing_obstacle = False
 
         self.algorithm = "A*"
+        self.is_node_graph=False
         self.mouse_pressed = False
         self.search_generator = None
 
@@ -83,6 +86,7 @@ class GridManager:
                 try:
                     self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
                     if self.path and self.path[-1] == self.goal:
+                        print("found the path")
                         self.explored_points = set()
                         self.fronteriors_points = set()
                         self.search_generator = None
@@ -153,16 +157,20 @@ class GridManager:
             elif 350 <= mouse_y <= 380:
                 if self.screen_width + 10 <= mouse_x < self.screen_width + 60:
                     self.algorithm = "A*"
+                    self.is_node_graph=False
                     self.start_search()
                 elif self.screen_width + 60 <= mouse_x < self.screen_width + 110:
                     self.algorithm = "Dijkstra"
+                    self.is_node_graph=False
                     self.start_search()
                 elif self.screen_width + 110 <= mouse_x < self.screen_width + 160:
                     self.algorithm = "Theta*"
+                    self.is_node_graph=False
                     self.start_search()
                 elif self.screen_width + 160 <= mouse_x < self.screen_width + 210:
                     print("Selecting RRT*")
-                    self.algorithm = "RRT**"
+                    self.algorithm = "RRT*"
+                    self.is_node_graph=True
                     self.start_search()
 
     def start_search(self):
@@ -174,7 +182,7 @@ class GridManager:
         elif self.algorithm == "Theta*":
             self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal)
         elif self.algorithm == "RRT*":
-            self.search_generator = d_star_lite_search(self.grid, self.start, self.goal)
+            self.search_generator = rrt_star_search(self.grid, self.start, self.goal)
         self.path = []
         self.explored_points = set()
         self.fronteriors_points = set()
@@ -238,7 +246,7 @@ class GridManager:
         self.update_cost_map(self.inflation_radius) # np.array(self.cost_map)
         draw_grid(self.screen,np.array(self.cost_map), self.cell_size, self.screen_width)
         draw_path(self.screen, self.path if self.path is not None else [], self.cell_size)
-        draw_explored_points(self.screen, self.explored_points, self.cell_size)
+        draw_explored_points(self.is_node_graph,self.screen, self.explored_points, self.cell_size)
         draw_fronteriors_points(self.screen, self.fronteriors_points, self.cell_size)
         draw_start_goal(self.screen, self.start, self.goal, self.cell_size)
         draw_side_panel(self.screen, self.screen_width, self.side_panel_width,

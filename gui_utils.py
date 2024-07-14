@@ -32,10 +32,15 @@ def draw_fronteriors_points(screen, fronteriors_points, cell_size):
         for row, col in fronteriors_points:
             pygame.draw.rect(screen, BLUE, (col * cell_size, row * cell_size, cell_size, cell_size))
 
-def draw_explored_points(screen, explored_points, cell_size):
-    for row, col in explored_points:
-        pygame.draw.rect(screen, ORANGE, (col * cell_size, row * cell_size, cell_size, cell_size))
-
+def draw_explored_points(is_node_graph,screen, explored_points, cell_size):
+    if(is_node_graph):
+        if(explored_points != None):
+            for i in explored_points:
+                i=[(point[1] * cell_size + cell_size // 2, point[0] * cell_size + cell_size // 2) for point in i]
+                pygame.draw.lines(screen, RED, False, i, 3)
+    else:
+        for row, col in explored_points:
+            pygame.draw.rect(screen, ORANGE, (col * cell_size, row * cell_size, cell_size, cell_size))
 def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting_obstacle, clearing_obstacle,algorithm):
     pygame.draw.rect(screen, GREY, (start_x, 0, width, screen.get_height()))
 

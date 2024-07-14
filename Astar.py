@@ -72,7 +72,7 @@ def make_plan(grid, start, goal):
     closed_list = [[False for _ in range(COL)] for _ in range(ROW)]
     # Initialize the details of each cell
     cell_details = [[Cell() for _ in range(COL)] for _ in range(ROW)]
-    neighbours=[(0,1),(0,-1),(1,0),(-1,0)]
+    neighbours=[(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)] #[(0,1),(0,-1),(1,0),(-1,0)]
     i=start[0]
     j=start[1]
     cell_details[i][j].f=0
