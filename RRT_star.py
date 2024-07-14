@@ -21,7 +21,7 @@ class RRTStar:
         x2, y2 = node2.position
         line_points = self.bresenham(x1, y1, x2, y2)
         for x, y in line_points:
-            if self.grid[int(y)][int(x)] == 1:
+            if self.grid[int(x)][int(y)] == 1:
                 return False
         return True
 
