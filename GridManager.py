@@ -16,7 +16,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(5, 5), cell_size=100):
+    def __init__(self, grid_size=(50, 50), cell_size=10):
         pygame.init()
 
         self.grid_size = grid_size
@@ -50,7 +50,7 @@ class GridManager:
 
         # Initialize sliders
         self.inflation_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 400), (180, 20)),
-                                                                       start_value=1,
+                                                                       start_value=0,
                                                                        value_range=(0, 10),
                                                                        manager=self.gui_manager)
 
@@ -75,7 +75,7 @@ class GridManager:
                 if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                     if event.ui_element == self.inflation_slider:
                         self.inflation_radius = int(self.inflation_slider.get_current_value())
-                        self.update_cost_map(self.inflation_radius)
+                        # self.update_cost_map(self.inflation_radius)
                 
                 self.gui_manager.process_events(event)
 
@@ -164,17 +164,15 @@ class GridManager:
                     print("Selecting RRT*")
                     self.algorithm = "RRT**"
                     self.start_search()
-                print(mouse_x)
-
 
     def start_search(self):
         self.search_generator = None
         if self.algorithm == "A*":
-            self.search_generator = a_star_search(self.grid, self.start, self.goal)
+            self.search_generator = a_star_search(np.array(self.cost_map), self.start, self.goal)
         elif self.algorithm == "Dijkstra":
-            self.search_generator = dijkstra_search(self.grid, self.start, self.goal)
+            self.search_generator = dijkstra_search(np.array(self.cost_map), self.start, self.goal)
         elif self.algorithm == "Theta*":
-            self.search_generator = theta_star_search(self.grid, self.start, self.goal)
+            self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal)
         elif self.algorithm == "RRT*":
             self.search_generator = d_star_lite_search(self.grid, self.start, self.goal)
         self.path = []
@@ -210,10 +208,9 @@ class GridManager:
         for row in range(self.grid.shape[0]):
             for col in range(self.grid.shape[1]):
                 if self.grid[row, col] == 1:
-                    print("found obstacle")
                     self.inflate_obstacle(row, col, inflation_radius+1)
                     self.cost_map[row][col]=1
-        print(self.cost_map)
+        # print(self.cost_map)
 
     def inflate_obstacle(self, row, col, inflation_radius):
         for dr in range(-inflation_radius, inflation_radius + 1):
@@ -223,7 +220,11 @@ class GridManager:
                 if 0 <= r < self.grid.shape[0] and 0 <= c < self.grid.shape[1]:
                     distance = max(abs(dr), abs(dc))
                     added_cost = max(0, inflation_radius - distance) * 0.1
-                    self.cost_map[r][c] += added_cost
+                    if(self.cost_map[r][c]==1):
+                        continue
+                    else:
+                        if (self.cost_map[r][c] < added_cost):
+                            self.cost_map[r][c] = added_cost
 
     def draw_slider(self):
         # self.gui_manager.update(0)
@@ -234,8 +235,8 @@ class GridManager:
 
     def update_display(self):
         self.screen.fill(WHITE)
-        # self.update_cost_map(self.inflation_radius)
-        draw_grid(self.screen, self.grid, self.cell_size, self.screen_width)
+        self.update_cost_map(self.inflation_radius) # np.array(self.cost_map)
+        draw_grid(self.screen,np.array(self.cost_map), self.cell_size, self.screen_width)
         draw_path(self.screen, self.path if self.path is not None else [], self.cell_size)
         draw_explored_points(self.screen, self.explored_points, self.cell_size)
         draw_fronteriors_points(self.screen, self.fronteriors_points, self.cell_size)

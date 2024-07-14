@@ -15,7 +15,7 @@ def is_valid(row, col):
 
 # Check if a cell is unblocked
 def is_unblocked(grid, row, col):
-    return grid[row][col] == 0
+    return grid[row][col] != 1
 
 def get_explored_points(closed_list):
     points=[]
@@ -39,6 +39,7 @@ def make_plan(grid,start, goal):
     open_list=[]
     closed_list=[[False for _ in range(len(grid[0]))] for _ in range(len(grid))]
     cell_details=[[Cells() for _ in range(len(grid[0]))] for _ in range(len(grid))]
+    cost_list=[[0.0 for _ in range(len(grid[0]))] for _ in range(len(grid))]
     i= start[0]
     j= start[1]
     path=[]
@@ -74,13 +75,15 @@ def make_plan(grid,start, goal):
                         col=temp_col
                     path.append((row,col))
                     path.reverse()
+                    print(cost_list)
                     found_dest=True
                     yield path,None,None
                 else:
-                    new_g=cell_details[i][j].g+1
+                    new_g=cell_details[i][j].g+ 1 + (5*grid[i][j])
                     if not closed_list[new_i][new_j] and cell_details[new_i][new_j].g>new_g:
                         heapq.heappush(open_list,(new_g,new_i,new_j))
                         cell_details[new_i][new_j].g=new_g
+                        cost_list[new_i][new_j]=new_g
                         cell_details[new_i][new_j].parent_i=i
                         cell_details[new_i][new_j].parent_j=j
         explored_points=get_explored_points(closed_list)

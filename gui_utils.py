@@ -11,9 +11,11 @@ ORANGE = (255, 165, 0)
 def draw_grid(screen, grid, cell_size, width):
     for row in range(grid.shape[0]):
         for col in range(grid.shape[1]):
-            color = WHITE
-            if grid[row, col] == 1:
-                color = BLACK
+            color=255*(1-grid[row, col])
+            color=((color,color,color))
+            # color = WHITE
+            # if grid[row, col] == 1:
+            #     color = BLACK
             pygame.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size, cell_size))
 
 def draw_start_goal(screen, start, goal, cell_size):
@@ -24,9 +26,7 @@ def draw_path(screen, path, cell_size):
     if len(path) > 1:
         path_points = [(point[1] * cell_size + cell_size // 2, point[0] * cell_size + cell_size // 2) for point in path]
         pygame.draw.lines(screen, BLUE, False, path_points, 3)
-# def draw_path(screen, path, cell_size):
-#     for row, col in path:
-#         pygame.draw.rect(screen, BLUE, (col * cell_size, row * cell_size, cell_size, cell_size))
+
 def draw_fronteriors_points(screen, fronteriors_points, cell_size):
     if(len(fronteriors_points)>0):
         for row, col in fronteriors_points:
@@ -47,6 +47,7 @@ def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting
     draw_button(screen, start_x + 10, 350, "A*", False,button_size=(50, 30), color= BLACK)
     draw_button(screen, start_x + 60, 350, "Dji", False,button_size=(50, 30), color= BLACK)
     draw_button(screen, start_x + 110, 350, "T*", False,button_size=(50, 30), color= BLACK)
+    draw_button(screen, start_x + 160, 350, "RRT*", False,button_size=(50, 30), color= BLACK)
 
 
 def draw_button(screen, x, y, text, active,button_size=(120, 30),color=RED):

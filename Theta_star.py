@@ -105,7 +105,7 @@ def make_plan(grid, start, goal):
             if grid[neighbor[0], neighbor[1]] == 1:
                 continue
                 
-            tent_g_score=cell_details[current[0]][current[1]].g + heuristic(current, neighbor)
+            tent_g_score=cell_details[current[0]][current[1]].g + (2*grid[current[0]][current[1]]) + heuristic(current, neighbor)
             
             if closed_list[neighbor[0]][neighbor[1]]: #neighbor in g_score:
                 if tent_g_score < cell_details[neighbor[0]][neighbor[1]].g:

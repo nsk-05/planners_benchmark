@@ -18,7 +18,7 @@ def is_valid(row, col):
 
 # Check if a cell is unblocked
 def is_unblocked(grid, row, col):
-    return grid[row][col] == 0
+    return grid[row][col] != 1
 
 def show_cell_cost(cell_details):
     for i in cell_details:
@@ -68,7 +68,6 @@ def make_plan(grid, start, goal):
     open_list=[]
     ROW=len(grid)
     COL=len(grid[0])
-    # closed_list=[]
     # Initialize the closed list (visited cells)
     closed_list = [[False for _ in range(COL)] for _ in range(ROW)]
     # Initialize the details of each cell
@@ -84,9 +83,6 @@ def make_plan(grid, start, goal):
 
     #intialize open list
     heapq.heappush(open_list,(0.0,i,j))
-
-    #reached dest flag
-    found_dest=False
 
     while len(open_list)>0:
         p=heapq.heappop(open_list)
@@ -110,7 +106,7 @@ def make_plan(grid, start, goal):
                     found_dest = True
                     yield path, None, None
                 else:
-                    g_new=cell_details[i][j].g+1.0
+                    g_new=cell_details[i][j].g+ 1 + (5*grid[i][j])
                     h_new=heuristics((new_i,new_j),goal)
                     f_new=g_new+h_new
 
@@ -125,7 +121,6 @@ def make_plan(grid, start, goal):
 
             explored_points=get_explored_points(closed_list)
             fronterior_points=get_fronterior_points(open_list)
-            # print(fronterior_points)
         yield None, explored_points, fronterior_points
     yield None, explored_points, fronterior_points
 
