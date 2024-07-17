@@ -1,6 +1,9 @@
 import random
 import math
 
+ROW = 0
+COL = 0
+
 class Node:
     def __init__(self, position):
         self.position = position
@@ -16,13 +19,33 @@ class RRT:
     def distance(self, node1, node2):
         return math.sqrt((node1.position[0] - node2.position[0]) ** 2 + (node1.position[1] - node2.position[1]) ** 2)
 
-    def is_collision_free(self, node1, node2):
+    def is_valid(self,row, col):
+        return (row >= 0) and (row < ROW) and (col >= 0) and (col < COL)
+
+    def is_collision_free(self, node1, node2,robot_radius):
         x1, y1 = node1.position
         x2, y2 = node2.position
         line_points = self.bresenham(x1, y1, x2, y2)
         for x, y in line_points:
-            if self.grid[int(x)][int(y)] == 1:
+            # if self.grid[int(x)][int(y)] == 1:
+            if(not self._is_collision_free(self.grid,x,y,robot_radius)):
                 return False
+        return True
+    
+    def _is_collision_free(self,grid, row, col,robot_radius):
+
+        for i in range(-robot_radius, robot_radius + 1):
+            for j in range(-robot_radius, robot_radius + 1):
+                check_row = row + i
+                check_col = col + j
+                # Check if the cell is within grid bounds
+                if (self.is_valid(check_row,check_col)):
+                    # If any cell within the robot's radius is an obstacle, return False
+                    if grid[check_row][check_col] == 1:
+                        return False
+                else:
+                    # If the cell is out of grid bounds, consider it as an obstacle
+                    return False
         return True
 
     def bresenham(self, x1, y1, x2, y2):
@@ -70,13 +93,16 @@ class RRT:
                 nearby_nodes.append(node)
         return nearby_nodes
 
-    def rewire(self, new_node, nearby_nodes):
+    def rewire(self, new_node, nearby_nodes,robot_radius):
         for nearby_node in nearby_nodes:
-            if (self.is_collision_free(new_node, nearby_node) )and (new_node.cost + self.distance(new_node, nearby_node) < nearby_node.cost):
+            if (self.is_collision_free(new_node, nearby_node,robot_radius) )and (new_node.cost + self.distance(new_node, nearby_node) < nearby_node.cost):
                 nearby_node.parent = new_node
                 nearby_node.cost = new_node.cost + self.distance(new_node, nearby_node)
 
-    def make_plan(self,grid, start, goal,is_generator):
+    def make_plan(self,grid, start, goal,is_generator,robot_radius):
+        global ROW,COL
+        ROW=len(grid)
+        COL=len(grid[0])
         print("rrt plannrer invoked")
         self.grid = grid
         self.start = Node(tuple(start))
@@ -97,18 +123,18 @@ class RRT:
                 continue
 
             new_node = Node(new_position)
-            if not self.is_collision_free(nearest_node, new_node):
+            if not self.is_collision_free(nearest_node, new_node,robot_radius):
                 continue
             new_node.parent = nearest_node
             new_node.cost = nearest_node.cost + self.distance(nearest_node, new_node) + (2*grid[new_position[0]][[new_position[1]]])
             nearby_nodes = self.get_nearby_nodes(new_node)
-            self.rewire(new_node, nearby_nodes)
+            self.rewire(new_node, nearby_nodes,robot_radius)
             self.nodes.append(new_node)
             node_list.append(new_node.position)
             fronterior_points.append(new_node.position)
             node_graph.append([new_node.position,new_node.parent.position])
 
-            if (self.distance(new_node, self.goal) <= self.step_size) and (self.is_collision_free(new_node, self.goal)):
+            if (self.distance(new_node, self.goal) <= self.step_size) and (self.is_collision_free(new_node, self.goal,robot_radius)):
                 self.goal.parent = new_node
                 self.goal.cost = new_node.cost + self.distance(new_node, self.goal)
                 self.nodes.append(self.goal)

@@ -19,7 +19,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(10, 10), cell_size=100):
+    def __init__(self, grid_size=(100, 100), cell_size=10):
         pygame.init()
 
         self.grid_size = grid_size
@@ -32,6 +32,7 @@ class GridManager:
         self.explored_points = set()
         self.fronteriors_points = set()
         self.inflation_radius=0
+        self.robot_radius=1
         self.screen_width = grid_size[1] * cell_size
         self.screen_height = grid_size[0] * cell_size
         self.side_panel_width = 250
@@ -61,8 +62,8 @@ class GridManager:
                                                                        manager=self.gui_manager)
 
         self.robot_radius_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 475), (180, 20)),
-                                                                       start_value=0,
-                                                                       value_range=(0, 10),
+                                                                       start_value=1,
+                                                                       value_range=(1, 10),
                                                                        manager=self.gui_manager)
         # Initialize cost map (0 for normal, higher values for higher costs)
         self.cost_map = [[0 for _ in range(grid_size[1])] for _ in range(grid_size[0])]
@@ -85,6 +86,8 @@ class GridManager:
                 if event.type == pygame_gui.UI_HORIZONTAL_SLIDER_MOVED:
                     if event.ui_element == self.inflation_slider:
                         self.inflation_radius = int(self.inflation_slider.get_current_value())
+                    if event.ui_element == self.robot_radius_slider:
+                        self.robot_radius = int(self.robot_radius_slider.get_current_value())
                         # self.update_cost_map(self.inflation_radius)
                 
                 self.gui_manager.process_events(event)
@@ -187,13 +190,14 @@ class GridManager:
         self.search_generator = None
         is_generator=self.visualize
         if self.algorithm == "A*":
-            self.search_generator = a_star_search(np.array(self.cost_map), self.start, self.goal,is_generator)
+            self.search_generator = a_star_search(np.array(self.cost_map), self.start, self.goal,is_generator,self.robot_radius)
         elif self.algorithm == "Dijkstra":
-            self.search_generator = dijkstra_search(np.array(self.cost_map), self.start, self.goal,is_generator)
+            self.search_generator = dijkstra_search(np.array(self.cost_map), self.start, self.goal,is_generator,self.robot_radius)
         elif self.algorithm == "Theta*":
-            self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal,is_generator)
+            self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal,is_generator,self.robot_radius)
         elif self.algorithm == "RRT":
             self.search_generator = rrt_search(self.grid, self.start, self.goal,is_generator)
+        
         if(not is_generator):
             self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
             if self.path :

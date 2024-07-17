@@ -14,8 +14,21 @@ def is_valid(row, col):
     return (row >= 0) and (row < ROW) and (col >= 0) and (col < COL)
 
 # Check if a cell is unblocked
-def is_unblocked(grid, row, col):
-    return grid[row][col] != 1
+def is_collision_free(grid, row, col,robot_radius):
+
+    for i in range(-robot_radius, robot_radius + 1):
+        for j in range(-robot_radius, robot_radius + 1):
+            check_row = row + i
+            check_col = col + j
+            # Check if the cell is within grid bounds
+            if (is_valid(check_row,check_col)):
+                # If any cell within the robot's radius is an obstacle, return False
+                if grid[check_row][check_col] == 1:
+                    return False
+            else:
+                # If the cell is out of grid bounds, consider it as an obstacle
+                return False
+    return True
 
 def get_explored_points(closed_list):
     points=[]
@@ -32,7 +45,7 @@ def get_fronterior_points(open_list):
         points.append((i[1],i[2]))
     return points
 
-def make_plan(grid,start, goal,is_generator):
+def make_plan(grid,start, goal,is_generator,robot_radius):
     global ROW,COL
     ROW = len(grid)
     COL = len(grid[0])
@@ -59,7 +72,7 @@ def make_plan(grid,start, goal,is_generator):
         for dir in neighbours:
             new_i=i+dir[0]
             new_j=j+dir[1]
-            if is_valid(new_i,new_j) and is_unblocked(grid,new_i,new_j) and not closed_list[new_i][new_j]:
+            if is_valid(new_i,new_j) and is_collision_free(grid,new_i,new_j,robot_radius) and not closed_list[new_i][new_j]:
                 if(new_i==goal[0] and new_j==goal[1]):
                     row=goal[0]
                     col=goal[1]

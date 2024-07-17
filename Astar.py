@@ -16,9 +16,22 @@ COL = 0
 def is_valid(row, col):
     return (row >= 0) and (row < ROW) and (col >= 0) and (col < COL)
 
-# Check if a cell is unblocked
-def is_unblocked(grid, row, col):
-    return grid[row][col] != 1
+
+def is_collision_free(grid, row, col,robot_radius):
+
+    for i in range(-robot_radius, robot_radius + 1):
+        for j in range(-robot_radius, robot_radius + 1):
+            check_row = row + i
+            check_col = col + j
+            # Check if the cell is within grid bounds
+            if (is_valid(check_row,check_col)):
+                # If any cell within the robot's radius is an obstacle, return False
+                if grid[check_row][check_col] == 1:
+                    return False
+            else:
+                # If the cell is out of grid bounds, consider it as an obstacle
+                return False
+    return True
 
 def show_cell_cost(cell_details):
     for i in cell_details:
@@ -62,7 +75,7 @@ def get_fronterior_points(open_list):
         points.append((i[1],i[2]))
     return points
 
-def make_plan(grid, start, goal,is_generator):
+def make_plan(grid, start, goal,is_generator,robot_radius):
     # create a opne list
     global ROW,COL
     open_list=[]
@@ -72,7 +85,7 @@ def make_plan(grid, start, goal,is_generator):
     closed_list = [[False for _ in range(COL)] for _ in range(ROW)]
     # Initialize the details of each cell
     cell_details = [[Cell() for _ in range(COL)] for _ in range(ROW)]
-    neighbours=[(0,1),(0,-1),(1,0),(-1,0)]
+    neighbours=[(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)] #[(0,1),(0,-1),(1,0),(-1,0)]
     i=start[0]
     j=start[1]
     cell_details[i][j].f=0
@@ -96,7 +109,7 @@ def make_plan(grid, start, goal,is_generator):
             new_i=i+dir[0]
             new_j=j+dir[1]
 
-            if is_valid(new_i,new_j) and is_unblocked(grid,new_i,new_j) and not closed_list[new_i][new_j]:
+            if is_valid(new_i,new_j) and is_collision_free(grid,new_i,new_j,robot_radius) and not closed_list[new_i][new_j]:
                 if new_i==goal[0] and new_j==goal[1]:
                     # Set the parent of the destination cell
                     cell_details[new_i][new_j].parent_i = i
