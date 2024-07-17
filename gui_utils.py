@@ -1,4 +1,5 @@
 import pygame
+import math
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -7,15 +8,16 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
+Algo="A*"
 
+def update_algo(algorithm):
+    global Algo
+    Algo=algorithm
 def draw_grid(screen, grid, cell_size, width):
     for row in range(grid.shape[0]):
         for col in range(grid.shape[1]):
             color=255*(1-grid[row, col])
             color=((color,color,color))
-            # color = WHITE
-            # if grid[row, col] == 1:
-            #     color = BLACK
             pygame.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size, cell_size))
 
 def draw_start_goal(screen, start, goal, cell_size):
@@ -24,13 +26,33 @@ def draw_start_goal(screen, start, goal, cell_size):
 
 def draw_path(screen, path, cell_size):
     if len(path) > 1:
-        path_points = [(point[1] * cell_size + cell_size // 2, point[0] * cell_size + cell_size // 2) for point in path]
-        pygame.draw.lines(screen, BLUE, False, path_points, 3)
+        if(Algo!="HA*"):
+            path_points = [(point[1] * cell_size + cell_size // 2, point[0] * cell_size + cell_size // 2) for point in path]
+            pygame.draw.lines(screen, BLUE, False, path_points, 3)
+        else:
+            for (x, y, theta) in path:
+                pos = (int(x * cell_size + cell_size / 2), int(y * cell_size + cell_size / 2))
+                draw_arrow(screen, pos, theta)
+
+def draw_arrow(screen, start, theta, color=(0, 255, 0)):
+    end_x = start[0] + 10 * math.cos(theta)
+    end_y = start[1] + 10 * math.sin(theta)
+    pygame.draw.line(screen, color, start, (end_x, end_y), 2)
+    # pygame.draw.polygon(screen, color, [
+    #     (end_x, end_y),
+    #     (end_x - 5 * math.cos(theta - math.pi / 4), end_y - 5 * math.sin(theta - math.pi / 4)),
+    #     (end_x - 5 * math.cos(theta + math.pi / 4), end_y - 5 * math.sin(theta + math.pi / 4))
+    # ])
 
 def draw_fronteriors_points(screen, fronteriors_points, cell_size):
     if(len(fronteriors_points)>0):
-        for row, col in fronteriors_points:
-            pygame.draw.rect(screen, BLUE, (col * cell_size, row * cell_size, cell_size, cell_size))
+        if(Algo!="HA*"):
+            for row, col in fronteriors_points:
+                pygame.draw.rect(screen, BLUE, (col * cell_size, row * cell_size, cell_size, cell_size))
+        else:
+            for (x,y,theta) in fronteriors_points:
+                pos = (int(x * cell_size + cell_size / 2), int(y * cell_size + cell_size / 2))
+                draw_arrow(screen, pos, theta,color=(0,0,255))
 
 def draw_explored_points(is_node_graph,screen, explored_points, cell_size):
     if(is_node_graph):
@@ -39,8 +61,14 @@ def draw_explored_points(is_node_graph,screen, explored_points, cell_size):
                 i=[(point[1] * cell_size + cell_size // 2, point[0] * cell_size + cell_size // 2) for point in i]
                 pygame.draw.lines(screen, RED, False, i, 3)
     else:
-        for row, col in explored_points:
-            pygame.draw.rect(screen, ORANGE, (col * cell_size, row * cell_size, cell_size, cell_size))
+        if(Algo!="HA*"):    
+            for row, col in explored_points:
+                pygame.draw.rect(screen, ORANGE, (col * cell_size, row * cell_size, cell_size, cell_size))
+        else:  
+            for (x, y, theta) in explored_points:
+                pos = (int(x * cell_size + cell_size / 2), int(y * cell_size + cell_size / 2))
+                draw_arrow(screen, pos, theta,color=(255,0,0))
+
 def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting_obstacle, clearing_obstacle,visualize):
     pygame.draw.rect(screen, GREY, (start_x, 0, width, screen.get_height()))
     draw_button(screen, start_x + 10, 100, "Set Start", setting_start)
@@ -51,8 +79,9 @@ def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting
     draw_button(screen, start_x + 10, 350, "A*", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 60, 350, "Dji", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 110, 350, "T*", False,button_size=(40, 30), color= BLACK)
-    draw_button(screen, start_x + 160, 350, "RRT*", False,button_size=(70, 30), color= BLACK)
-    draw_button(screen, start_x + 10, 430, "Visualize", visualize,button_size=(130, 30))
+    draw_button(screen, start_x + 160, 350, "RRT", False,button_size=(70, 30), color= BLACK)
+    # draw_button(screen, start_x + 10, 385, "HA*", False,button_size=(40, 30), color= BLACK)
+    draw_button(screen, start_x + 10, 500, "Visualize", visualize,button_size=(130, 30))
 
 def draw_button(screen, x, y, text, active,button_size=(120, 30),color=RED):
     font = pygame.font.Font(None, 36)

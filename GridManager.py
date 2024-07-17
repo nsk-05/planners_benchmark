@@ -1,13 +1,14 @@
 import pygame
 import pygame_gui
 import numpy as np
-from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points, draw_fronteriors_points
+from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points, draw_fronteriors_points,update_algo
 from Astar import make_plan as a_star_search
 from Djikstra import make_plan as dijkstra_search
 from Theta_star import make_plan as theta_star_search 
-from RRT_star import RRTStar
-rrt_star=RRTStar()
-rrt_star_search=rrt_star.make_plan
+# from hybrid_Astar import make_plan as ha_star_search
+from RRT import RRT
+rrt=RRT()
+rrt_search=rrt.make_plan
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -18,7 +19,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(100, 100), cell_size=10):
+    def __init__(self, grid_size=(10, 10), cell_size=100):
         pygame.init()
 
         self.grid_size = grid_size
@@ -48,16 +49,21 @@ class GridManager:
         self.is_node_graph=False
         self.mouse_pressed = False
         self.search_generator = None
+        self.iteration=0
 
         # Initialize pygame GUI manager
         self.gui_manager = pygame_gui.UIManager((self.total_width, self.screen_height))
 
         # Initialize sliders
-        self.inflation_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 400), (180, 20)),
+        self.inflation_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 435), (180, 20)),
                                                                        start_value=0,
                                                                        value_range=(0, 10),
                                                                        manager=self.gui_manager)
 
+        self.robot_radius_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 475), (180, 20)),
+                                                                       start_value=0,
+                                                                       value_range=(0, 10),
+                                                                       manager=self.gui_manager)
         # Initialize cost map (0 for normal, higher values for higher costs)
         self.cost_map = [[0 for _ in range(grid_size[1])] for _ in range(grid_size[0])]
 
@@ -86,9 +92,7 @@ class GridManager:
             if self.search_generator:
                 try:
                     self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
-                    if self.path :
-                        print(self.path[-1],self.goal)
-                        print("found the path so closing")
+                    if self.path :     
                         self.explored_points = set()
                         self.fronteriors_points = set()
                         self.search_generator = None
@@ -172,7 +176,7 @@ class GridManager:
                     self.start_search()
                 elif self.screen_width + 160 <= mouse_x < self.screen_width + 230:
                     print("Selecting RRT*")
-                    self.algorithm = "RRT*"
+                    self.algorithm = "RRT"
                     self.is_node_graph=True
                     self.start_search()
             elif 430 <= mouse_y <= 460:
@@ -188,8 +192,8 @@ class GridManager:
             self.search_generator = dijkstra_search(np.array(self.cost_map), self.start, self.goal,is_generator)
         elif self.algorithm == "Theta*":
             self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal,is_generator)
-        elif self.algorithm == "RRT*":
-            self.search_generator = rrt_star_search(self.grid, self.start, self.goal,is_generator)
+        elif self.algorithm == "RRT":
+            self.search_generator = rrt_search(self.grid, self.start, self.goal,is_generator)
         if(not is_generator):
             self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
             if self.path :
@@ -252,11 +256,14 @@ class GridManager:
         self.gui_manager.draw_ui(self.screen)
         font = pygame.font.Font(None, 24)
         slider_label = font.render(f'Inflation Radius: {self.inflation_slider.get_current_value()}', True, BLACK)
-        self.screen.blit(slider_label, (self.screen_width + 10, 385))
+        self.screen.blit(slider_label, (self.screen_width + 10, 420))
+        slider_label = font.render(f'Robot Radius: {self.robot_radius_slider.get_current_value()}', True, BLACK)
+        self.screen.blit(slider_label, (self.screen_width + 10, 460))
 
     def update_display(self):
         self.screen.fill(WHITE)
         self.update_cost_map(self.inflation_radius) # np.array(self.cost_map)
+        update_algo(self.algorithm)
         draw_grid(self.screen,np.array(self.cost_map), self.cell_size, self.screen_width)
         draw_path(self.screen, self.path if self.path is not None else [], self.cell_size)
         draw_explored_points(self.is_node_graph,self.screen, self.explored_points, self.cell_size)

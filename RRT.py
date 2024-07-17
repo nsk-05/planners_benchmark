@@ -6,7 +6,7 @@ class Node:
         self.position = position
         self.parent = None
         self.cost = 0.0
-class RRTStar:
+class RRT:
     def __init__(self, max_iterations=10000, step_size=5, search_radius=10):
         self.max_iterations = max_iterations
         self.step_size = step_size
@@ -98,27 +98,22 @@ class RRTStar:
 
             new_node = Node(new_position)
             if not self.is_collision_free(nearest_node, new_node):
-                # self.ax.plot(new_node.position[0],new_node.position[1], 'o',color='red')
                 continue
-            # self.ax.plot(new_node.position[0],new_node.position[1], 'o',color='blue')
             new_node.parent = nearest_node
-            new_node.cost = nearest_node.cost + self.distance(nearest_node, new_node)
+            new_node.cost = nearest_node.cost + self.distance(nearest_node, new_node) + (2*grid[new_position[0]][[new_position[1]]])
             nearby_nodes = self.get_nearby_nodes(new_node)
             self.rewire(new_node, nearby_nodes)
             self.nodes.append(new_node)
             node_list.append(new_node.position)
             fronterior_points.append(new_node.position)
             node_graph.append([new_node.position,new_node.parent.position])
-            # self.update_display(new_node)
 
             if (self.distance(new_node, self.goal) <= self.step_size) and (self.is_collision_free(new_node, self.goal)):
                 self.goal.parent = new_node
                 self.goal.cost = new_node.cost + self.distance(new_node, self.goal)
                 self.nodes.append(self.goal)
                 self.path = self.extract_path()
-                # self.update_display(self.goal)
-                print("path_found", self.path)
-                yield self.path, None, None
+                yield self.path, node_graph, fronterior_points
             
             if(is_generator):      
                yield None, node_graph, fronterior_points
@@ -134,4 +129,3 @@ class RRTStar:
         path.append(self.start.position)
         path.reverse()
         return path
-
