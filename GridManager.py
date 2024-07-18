@@ -1,7 +1,6 @@
 import pygame
 import pygame_gui
 import numpy as np
-import time
 from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points, draw_fronteriors_points,update_algo
 from Astar import make_plan as a_star_search
 from Djikstra import make_plan as dijkstra_search
@@ -33,6 +32,8 @@ class GridManager:
         self.grid[:,grid_size[1]-1]=1
         self.start = (1, 1)
         self.goal = (grid_size[0]-2,grid_size[1]-2)
+        self.start_angle=0
+        self.goal_angle=0
         self.path = []
         self.explored_points = set()
         self.fronteriors_points = set()
@@ -70,6 +71,12 @@ class GridManager:
                                                                        start_value=1,
                                                                        value_range=(1, 10),
                                                                        manager=self.gui_manager)
+        
+        self.robot_angle_slider = pygame_gui.elements.UIHorizontalSlider(relative_rect=pygame.Rect((self.screen_width + 10, 555), (180, 20)),
+                                                                       start_value=0,
+                                                                       value_range=(-180, 180),
+                                                                       manager=self.gui_manager,visible=0)
+
         # Initialize cost map (0 for normal, higher values for higher costs)
         self.cost_map = [[0 for _ in range(grid_size[1])] for _ in range(grid_size[0])]
 
@@ -93,7 +100,11 @@ class GridManager:
                         self.inflation_radius = int(self.inflation_slider.get_current_value())
                     if event.ui_element == self.robot_radius_slider:
                         self.robot_radius = int(self.robot_radius_slider.get_current_value())
-                        # self.update_cost_map(self.inflation_radius)
+                    if event.ui_element == self.robot_angle_slider:
+                        if(self.setting_start):
+                            self.start_angle = int(self.robot_angle_slider.get_current_value())
+                        if(self.setting_goal):
+                            self.goal_angle = int(self.robot_angle_slider.get_current_value())
                 
                 self.gui_manager.process_events(event)
 
@@ -142,11 +153,13 @@ class GridManager:
         if self.screen_width + 10 <= mouse_x <= self.screen_width + 180:
             if 100 <= mouse_y <= 130:
                 self.setting_start = not self.setting_start
+                self.robot_angle_slider.set_current_value(self.start_angle)
                 self.setting_goal = False
                 self.setting_obstacle = False
                 self.clearing_obstacle = False
             elif 150 <= mouse_y <= 180:
                 self.setting_goal = not self.setting_goal
+                self.robot_angle_slider.set_current_value(self.goal_angle)
                 self.setting_start = False
                 self.setting_obstacle = False
                 self.clearing_obstacle = False
@@ -209,7 +222,7 @@ class GridManager:
         elif self.algorithm == "RRT":
             self.search_generator = rrt_search(self.grid, self.start, self.goal,is_generator,self.robot_radius)
         elif self.algorithm == "HA*":
-            self.search_generator = ha_star_search(self.grid, [self.start[0],self.start[1],90], [self.goal[0],self.goal[1],-90],is_generator,self.robot_radius)
+            self.search_generator = ha_star_search(self.grid, [self.start[0],self.start[1],self.start_angle], [self.goal[0],self.goal[1],self.goal_angle],is_generator,self.robot_radius)
         
         if(not is_generator):
             self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
@@ -276,10 +289,16 @@ class GridManager:
         self.screen.blit(slider_label, (self.screen_width + 10, 420))
         slider_label = font.render(f'Robot Radius: {self.robot_radius_slider.get_current_value()}', True, BLACK)
         self.screen.blit(slider_label, (self.screen_width + 10, 460))
+        if(self.setting_goal or self.setting_start):
+            self.robot_angle_slider.show()
+            slider_label = font.render(f'Robot angle: {self.robot_angle_slider.get_current_value()}', True, BLACK)
+            self.screen.blit(slider_label, (self.screen_width + 10, 540))
+        else:
+            self.robot_angle_slider.hide()
 
     def update_display(self):
         self.screen.fill(WHITE)
-        self.update_cost_map(self.inflation_radius) # np.array(self.cost_map)
+        self.update_cost_map(self.inflation_radius)
         update_algo(self.algorithm)
         draw_grid(self.screen,np.array(self.cost_map), self.cell_size, self.screen_width)
         draw_path(self.screen, self.path if self.path is not None else [], self.cell_size)
