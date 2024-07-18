@@ -27,22 +27,14 @@ def draw_start_goal(screen, start, goal, cell_size):
 def draw_path(screen, path, cell_size):
     if len(path) > 1:
         if(Algo!="HA*"):
-            path_points = [(point[1] * cell_size + cell_size // 2, point[0] * cell_size + cell_size // 2) for point in path]
+            path_points = [(point[1] * cell_size + cell_size / 2, point[0] * cell_size + cell_size / 2) for point in path]
             pygame.draw.lines(screen, BLUE, False, path_points, 3)
         else:
             for (x, y, theta) in path:
                 pos = (int(x * cell_size + cell_size / 2), int(y * cell_size + cell_size / 2))
-                draw_arrow(screen, pos, theta)
-
-def draw_arrow(screen, start, theta, color=(0, 255, 0)):
-    end_x = start[0] + 10 * math.cos(theta)
-    end_y = start[1] + 10 * math.sin(theta)
-    pygame.draw.line(screen, color, start, (end_x, end_y), 2)
-    # pygame.draw.polygon(screen, color, [
-    #     (end_x, end_y),
-    #     (end_x - 5 * math.cos(theta - math.pi / 4), end_y - 5 * math.sin(theta - math.pi / 4)),
-    #     (end_x - 5 * math.cos(theta + math.pi / 4), end_y - 5 * math.sin(theta + math.pi / 4))
-    # ])
+                end_x = pos[0] + math.cos(theta)
+                end_y = pos[1] + math.sin(theta)
+                pygame.draw.line(screen, BLUE, pos, (end_x, end_y), 3)
 
 def draw_fronteriors_points(screen, fronteriors_points, cell_size):
     if(len(fronteriors_points)>0):
@@ -52,7 +44,6 @@ def draw_fronteriors_points(screen, fronteriors_points, cell_size):
         else:
             for (x,y,theta) in fronteriors_points:
                 pos = (int(x * cell_size + cell_size / 2), int(y * cell_size + cell_size / 2))
-                draw_arrow(screen, pos, theta,color=(0,0,255))
 
 def draw_explored_points(is_node_graph,screen, explored_points, cell_size):
     if(is_node_graph):
@@ -67,7 +58,6 @@ def draw_explored_points(is_node_graph,screen, explored_points, cell_size):
         else:  
             for (x, y, theta) in explored_points:
                 pos = (int(x * cell_size + cell_size / 2), int(y * cell_size + cell_size / 2))
-                draw_arrow(screen, pos, theta,color=(255,0,0))
 
 def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting_obstacle, clearing_obstacle,visualize):
     pygame.draw.rect(screen, GREY, (start_x, 0, width, screen.get_height()))
@@ -80,7 +70,7 @@ def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting
     draw_button(screen, start_x + 60, 350, "Dji", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 110, 350, "T*", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 160, 350, "RRT", False,button_size=(70, 30), color= BLACK)
-    # draw_button(screen, start_x + 10, 385, "HA*", False,button_size=(40, 30), color= BLACK)
+    draw_button(screen, start_x + 10, 385, "HA*", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 10, 500, "Visualize", visualize,button_size=(130, 30))
 
 def draw_button(screen, x, y, text, active,button_size=(120, 30),color=RED):

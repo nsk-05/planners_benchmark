@@ -1,11 +1,13 @@
 import pygame
 import pygame_gui
 import numpy as np
+import time
 from gui_utils import draw_grid, draw_start_goal, draw_path, draw_side_panel, draw_explored_points, draw_fronteriors_points,update_algo
 from Astar import make_plan as a_star_search
 from Djikstra import make_plan as dijkstra_search
 from Theta_star import make_plan as theta_star_search 
-# from hybrid_Astar import make_plan as ha_star_search
+# from HAstar import make_plan as ha_star_search
+from HybridAStar.hybrid_a_star import make_plan as ha_star_search
 from RRT import RRT
 rrt=RRT()
 rrt_search=rrt.make_plan
@@ -19,7 +21,7 @@ GREY = (200, 200, 200)
 ORANGE = (255, 165, 0)
 
 class GridManager:
-    def __init__(self, grid_size=(100, 100), cell_size=10):
+    def __init__(self, grid_size=(200, 200), cell_size=5):
         pygame.init()
 
         self.grid_size = grid_size
@@ -182,7 +184,13 @@ class GridManager:
                     self.algorithm = "RRT"
                     self.is_node_graph=True
                     self.start_search()
-            elif 430 <= mouse_y <= 460:
+            elif 385 <= mouse_y <= 415:
+                if self.screen_width + 10 <= mouse_x < self.screen_width + 60:
+                    print("Selecting HA*")
+                    self.algorithm = "HA*"
+                    self.is_node_graph=False
+                    self.start_search()
+            elif 490 <= mouse_y <= 520:
                 self.visualize = not self.visualize
                 print("changing visualization")
 
@@ -196,7 +204,9 @@ class GridManager:
         elif self.algorithm == "Theta*":
             self.search_generator = theta_star_search(np.array(self.cost_map), self.start, self.goal,is_generator,self.robot_radius)
         elif self.algorithm == "RRT":
-            self.search_generator = rrt_search(self.grid, self.start, self.goal,is_generator)
+            self.search_generator = rrt_search(self.grid, self.start, self.goal,is_generator,self.robot_radius)
+        elif self.algorithm == "HA*":
+            self.search_generator = ha_star_search(self.grid, [self.start[0],self.start[1],90], [self.goal[0],self.goal[1],-90],is_generator,self.robot_radius)
         
         if(not is_generator):
             self.path, self.explored_points, self.fronteriors_points = next(self.search_generator)
