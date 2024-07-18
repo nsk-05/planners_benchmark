@@ -27,9 +27,12 @@ class GridManager:
         self.grid_size = grid_size
         self.cell_size = cell_size #int(1000 / grid_size[0]) #cell_size
         self.grid = np.zeros(grid_size, dtype=int)
-
-        self.start = (0, 0)
-        self.goal = (grid_size[0]-1,grid_size[1]-1)
+        self.grid[0,:]=1
+        self.grid[grid_size[1]-1,:]=1
+        self.grid[:,0]=1
+        self.grid[:,grid_size[1]-1]=1
+        self.start = (1, 1)
+        self.goal = (grid_size[0]-2,grid_size[1]-2)
         self.path = []
         self.explored_points = set()
         self.fronteriors_points = set()
