@@ -8,7 +8,7 @@ from Theta_star import make_plan as theta_star_search
 # from HAstar import make_plan as ha_star_search
 from HybridAStar.hybrid_a_star import make_plan as ha_star_search
 from RRT import RRT
-rrt=RRT()
+rrt=RRT(max_iterations=10000,step_size=3,exploration_constant=0.8)
 rrt_search=rrt.make_plan
 
 WHITE = (255, 255, 255)
@@ -22,6 +22,7 @@ ORANGE = (255, 165, 0)
 class GridManager:
     def __init__(self, grid_size=(200, 200), cell_size=5):
         pygame.init()
+        pygame.display.set_caption("Planner visualizer")
 
         self.grid_size = grid_size
         self.cell_size = cell_size #int(1000 / grid_size[0]) #cell_size
@@ -45,6 +46,7 @@ class GridManager:
         self.total_width = self.screen_width + self.side_panel_width
 
         self.screen = pygame.display.set_mode((self.total_width, self.screen_height))
+        
 
         self.setting_start = False
         self.setting_goal = False
@@ -139,7 +141,6 @@ class GridManager:
                 self.grid[row, col] = 0
             elif self.setting_start:
                 self.start = (row, col)
-                # self.setting_start = False
                 self.setting_goal = False
                 self.start_search()
             elif self.setting_goal:

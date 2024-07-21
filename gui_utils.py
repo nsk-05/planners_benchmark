@@ -35,7 +35,7 @@ def draw_path(screen, path, cell_size):
                 end_x = pos[0] + math.cos(theta)
                 end_y = pos[1] + math.sin(theta)
                 pygame.draw.line(screen, BLUE, pos, (end_x, end_y), 3)
-
+    
 def draw_fronteriors_points(screen, fronteriors_points, cell_size):
     if(len(fronteriors_points)>0):
         if(Algo!="HA*"):

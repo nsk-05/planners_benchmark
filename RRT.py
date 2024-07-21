@@ -10,10 +10,10 @@ class Node:
         self.parent = None
         self.cost = 0.0
 class RRT:
-    def __init__(self, max_iterations=10000, step_size=5, search_radius=10):
+    def __init__(self, max_iterations=10000, step_size=3,exploration_constant=0.9):
         self.max_iterations = max_iterations
         self.step_size = step_size
-        self.search_radius = search_radius
+        self.exploration_constant=exploration_constant
         self.path = []
 
     def distance(self, node1, node2):
@@ -71,6 +71,8 @@ class RRT:
 
     def get_random_node(self):
         while True:
+            if(random.randint(0, self.grid.shape[1] - 1)>(self.grid.shape[1]*self.exploration_constant)):
+                return self.goal
             x = random.randint(0, self.grid.shape[1] - 1)
             y = random.randint(0, self.grid.shape[0] - 1)
             if self.grid[y, x] == 0:
@@ -86,19 +88,6 @@ class RRT:
                 min_distance = dist
         return nearest_node
 
-    def get_nearby_nodes(self, new_node):
-        nearby_nodes = []
-        for node in self.nodes:
-            if self.distance(node, new_node) <= self.search_radius:
-                nearby_nodes.append(node)
-        return nearby_nodes
-
-    def rewire(self, new_node, nearby_nodes,robot_radius):
-        for nearby_node in nearby_nodes:
-            if (self.is_collision_free(new_node, nearby_node,robot_radius) )and (new_node.cost + self.distance(new_node, nearby_node) < nearby_node.cost):
-                nearby_node.parent = new_node
-                nearby_node.cost = new_node.cost + self.distance(new_node, nearby_node)
-
     def make_plan(self,grid, start, goal,is_generator,robot_radius):
         global ROW,COL
         ROW=len(grid)
@@ -106,6 +95,7 @@ class RRT:
         print("rrt plannrer invoked")
         self.grid = grid
         self.start = Node(tuple(start))
+        self.start.cost=-10
         self.goal = Node(tuple(goal))
         self.nodes = [self.start]
         node_list=[]
@@ -127,8 +117,7 @@ class RRT:
                 continue
             new_node.parent = nearest_node
             new_node.cost = nearest_node.cost + self.distance(nearest_node, new_node) + (2*grid[new_position[0]][[new_position[1]]])
-            nearby_nodes = self.get_nearby_nodes(new_node)
-            self.rewire(new_node, nearby_nodes,robot_radius)
+            # nearby_nodes = self.get_nearby_nodes(new_node)
             self.nodes.append(new_node)
             node_list.append(new_node.position)
             fronterior_points.append(new_node.position)
@@ -140,6 +129,10 @@ class RRT:
                 self.nodes.append(self.goal)
                 self.path = self.extract_path()
                 yield self.path, node_graph, fronterior_points
+            node_graph=[]
+            for i in self.nodes:
+                if(i.parent!=None):
+                    node_graph.append([i.position,i.parent.position])
             
             if(is_generator):      
                yield None, node_graph, fronterior_points

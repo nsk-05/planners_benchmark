@@ -72,7 +72,6 @@ def calc_distance_heuristic(grid,gx, gy, ox, oy, resolution, rr):
             continue
 
         # Remove the item from the open set
-
         # expand search grid based on motion model
         for i, _ in enumerate(motion):
             node = Node(current.x + motion[i][0],
