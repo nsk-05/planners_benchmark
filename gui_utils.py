@@ -70,7 +70,8 @@ def draw_side_panel(screen, start_x, width, setting_start, setting_goal, setting
     draw_button(screen, start_x + 60, 350, "Dji", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 110, 350, "T*", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 160, 350, "RRT", False,button_size=(70, 30), color= BLACK)
-    draw_button(screen, start_x + 10, 385, "HA*", False,button_size=(40, 30), color= BLACK)
+    draw_button(screen, start_x + 10, 385, "RRT*", False,button_size=(70, 30), color= BLACK)
+    draw_button(screen, start_x + 80, 385, "HA*", False,button_size=(40, 30), color= BLACK)
     draw_button(screen, start_x + 10, 500, "Visualize", visualize,button_size=(130, 30))
 
 def draw_button(screen, x, y, text, active,button_size=(120, 30),color=RED):
