@@ -1,7 +1,8 @@
-## Planner testing and visualising
-#### python version :   3.12.2
-#### pygame version : 2.5.0
-#### pygame_gui version : 0.6.0
+# Planner testing and visualising
 
+## Requirements 
+    python version :   3.12.2
+    pip install pygame==2.5.0 pygame_gui==0.6.0
 
-#### Script to run: main.py 
+## Running Visualizer 
+    python3.12 main.py 
