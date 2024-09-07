@@ -4,4 +4,4 @@
 #### pygame_gui version : 0.6.0
 
 
-#### Script to run: GridManager.py 
+#### Script to run: main.py 

@@ -104,7 +104,7 @@ class RRT_star:
 
     def rewire(self, new_node, nearby_nodes,robot_radius):
         for nearby_node in nearby_nodes:
-            if (self.is_collision_free(new_node, nearby_node,robot_radius)) and (new_node.cost + self.distance(new_node, nearby_node) <  nearby_node.cost):
+            if (self.is_collision_free(new_node, nearby_node,robot_radius)) and (new_node.cost + self.distance(new_node, nearby_node) < (1.0 * nearby_node.cost)):
                 nearby_node.parent = new_node
                 nearby_node.cost = new_node.cost + self.distance(new_node, nearby_node)
 
