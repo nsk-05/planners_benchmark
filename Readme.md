@@ -32,4 +32,6 @@ Make sure you have the following dependencies installed:
    ```bash
    python3 main.py
    ```
+   
+Demo videos:
 ![Demo video](https://github.com/user-attachments/assets/28e27d51-d18e-4706-a1a4-95e584743fb6)
